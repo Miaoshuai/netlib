@@ -5,16 +5,16 @@
     > Other :  
     > Created Time: 2015年12月19日 星期六 22时31分17秒
  =======================================================*/
-#include "eventLoop.h"
+#include "event_loop.h"
 #include "epoll.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
-
+#include <stdio.h>
 using namespace netlib;
 
-EventLoop::EventLoop(eventFd)
-    :epoll_(new Epoll(1024))
+EventLoop::EventLoop(int eventFd)
+    :eventFd_(eventFd),epoll_(new Epoll(1024))
 {
     //将eventFd_添加到epoll事件表中
     epoll_->addFd(eventFd_);
@@ -30,7 +30,7 @@ void EventLoop::loop()
     while(1)
     {
         int count = epoll_->wait(events_);
-        int sockfd; 
+        int sockfd;
         for(int i = 0; i < count ; i++)
         {
             sockfd = events_[i].data.fd;
@@ -41,7 +41,7 @@ void EventLoop::loop()
             else if(events_[i].events & EPOLLHUP)
             {
                 //处理关闭事件
-                cloesCallback_();
+                closeCallback_();
             }
             else if(events_[i].events & EPOLLIN)
             {
@@ -67,7 +67,7 @@ void EventLoop::handleEventFdRead(void)
     ssize_t count = read(eventFd_,&fd,sizeof(fd));
     assert(count == sizeof(fd));
     //将新来的套接字添加进epoll事件表中
-    epoll_->addFd((int)fd);   
+    epoll_->addFd((int)fd);
 }
 
 
