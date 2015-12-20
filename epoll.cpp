@@ -14,8 +14,9 @@
 
 using namespace netlib;
 
-Epoll::Epoll(int epollSize,int enableET = false):epollSize_(epollSize),enableET_(enableET)
+Epoll::Epoll(int epollSize):epollSize_(epollSize)
 {
+    maxEvents_ = 1024;
     epollFd_ = epoll_create(epollSize_);
 }
 
@@ -36,10 +37,7 @@ void Epoll::addFd(int fd)
     struct epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN  ;
-    if(enableET_)
-    {
-        event.events |= EPOLLET;
-    }
+    
     epoll_ctl(epollFd_,EPOLL_CTL_ADD,fd,&event);
     setNonBlocking(fd);
 }
@@ -47,7 +45,7 @@ void Epoll::addFd(int fd)
 void Epoll::modFd(int fd,int events)
 {
     struct epoll_event event;
-    event.fd = fd;
+    event.data.fd = fd;
     event.events = events;
     epoll_ctl(epollFd_,EPOLL_CTL_MOD,fd,&event);
 }
@@ -60,7 +58,7 @@ void Epoll::delFd(int fd)
 
 int Epoll::wait(struct epoll_event *events)
 {
-    int count = epoll_wait(epollFd_,events,epollSize_,NULL);   //无超时时间
+    int count = epoll_wait(epollFd_,events,maxEvents_,-1);   //无超时时间
     return count; 
 }
 
