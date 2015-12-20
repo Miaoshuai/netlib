@@ -20,9 +20,8 @@ namespace netlib
     {
         public:
             typedef std::function<void(void)> threadFunc;
-            LoopThreadPool();
+            LoopThreadPool(int number);
             ~LoopThreadPool();
-            void setLoopNumber(int number); //用于设置loop的数量
             int getNextLoop();             //返回下一个loop的eventfd
             void start();                   //开始运行loop线程池
             int createEventFd();            //创建eventfd
