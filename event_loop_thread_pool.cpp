@@ -16,9 +16,9 @@
 
 using namespace netlib;
 
-LoopThreadPool::LoopThreadPool()
+LoopThreadPool::LoopThreadPool(int number)
+    :loopNumber_(number)
 {
-    loopNumber_ = 0;
     next_ = 1;
 }
 
@@ -26,11 +26,6 @@ LoopThreadPool::LoopThreadPool()
 LoopThreadPool::~LoopThreadPool()
 {
 
-}
-
-void LoopThreadPool::setLoopNumber(int number)
-{
-    loopNumber_ = number;
 }
 
 
