@@ -14,7 +14,7 @@ namespace netlib
     class Epoll
     {
         public:
-            Epoll(int epollSize,bool enableET = false);
+            Epoll(int epollSize);
             ~Epoll();
             void setNonBlocking(int fd);     //将套接字描述符设为非阻塞
             void addFd(int fd);         //向epoll内核事件表添加事件
@@ -22,7 +22,6 @@ namespace netlib
             void delFd(int fd);         //将epoll事件表中的某个事件删除
             int wait(struct epoll_event *events);
         private:
-            bool enableET_;      //是否使用ET模式
             int epollSize_;     //epoll内核事件表的大小
             int epollFd_;       //epoll内核事件表的描述符
             int maxEvents_;         //epoll_wait最多监听的事件个数
