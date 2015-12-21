@@ -14,15 +14,17 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <memory>
 
 using namespace netlib;
 
 BaseLoop::BaseLoop(std::string ip,int port,int loopNumber)
     :ip_(ip),
     port_(port),
-    loopThreadPoolPtr_(new LoopThreadPool(loopNumber))
+    loopThreadPoolPtr_(std::make_shared<LoopThreadPool>(loopNumber))
 {
-
 }
 
 BaseLoop::~BaseLoop()
@@ -36,7 +38,7 @@ int BaseLoop::createListenFd(void)
     struct sockaddr_in address;
     bzero(&address,sizeof(address));
     address.sin_family = AF_INET;
-    inet_pton(AF_INET,ip_,&address.sin_addr);
+    inet_pton(AF_INET,ip_.c_str(),&address.sin_addr);
     address.sin_port = htons(port_);
 
     int sock = socket(PF_INET,SOCK_STREAM,0);
@@ -52,11 +54,17 @@ int BaseLoop::createListenFd(void)
 }
 
 
-void BaseLoop::startListen(void)
+void BaseLoop::start(void)
 {
     struct sockaddr_in clientAddress;   //保存客户端地址
     socklen_t len = sizeof(clientAddress); //客户端地址长度
     int connfd;
+    listenFd_ = createListenFd();       //获得监听套接字
+
+    loopThreadPoolPtr_->setReadCallback(readCallback_); //设置读回调函数
+    loopThreadPoolPtr_->setCloseCallback(closeCallback_);//设置关闭回调函数
+    loopThreadPoolPtr_->start();        //开启loop线程池
+
     while(1)
     {
         connfd = accept(listenFd_,(struct sockaddr *)&clientAddress,&len);
@@ -65,11 +73,11 @@ void BaseLoop::startListen(void)
 }
 
 
-void BaseLoop::connectionHandle(connfd)
+void BaseLoop::connectionHandle(int connfd)
 {
     int fd = loopThreadPoolPtr_->getNextLoop();
     uint64_t buff = connfd;
-    int ret = write(fd,&buff,sizeof(buff));
+    int ret = write(fd,&buff,sizeof(buff));     //添加到指定的loop循环中
     assert(ret == sizeof(buff));
     //下面可以加入用户自定义的连接回调  
 }
