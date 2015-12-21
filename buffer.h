@@ -27,15 +27,15 @@ namespace netlib
                 assert(readerIndex_ == 0);
                 assert(writeIndex_ == 0);                
             }
-            ~Buffer();
+            ~Buffer(){}
             int readableSize()  //可读字节数
             {
-                writeIndex_ - readerIndex_;   
+                return writeIndex_ - readerIndex_;   
             }
 
             int writeableSize() //可写字节
             {
-                buffer_.size() - writeIndex_;//注意size()由于我们为buffer_初始化了一个大小，所以size()便是我们buffer_的总大小
+                return buffer_.size() - writeIndex_;//注意size()由于我们为buffer_初始化了一个大小，所以size()便是我们buffer_的总大小
             }
 
             int recyclableSize()    //已经读过的可以回收的字节大小
@@ -43,50 +43,53 @@ namespace netlib
                 return readerIndex_;
             }
 
-            void append(char *data,int len);
+            void append(const char *data,int len)
             {
                 makeSureEnough(len);    //确保空间可写
                 
                 std::copy(data,data + len,getWritePeek());  //将data中的数据拷贝到buffer中去
-                moveWriteindex(len);
+                moveWriteIndex(len);
             }
 
-            void append(void *data,int len) 
+            void append(const void *data,int len) 
             {
                 append((char *)data,len);
             }
 
-            void append(std::string data)
+            void append(const std::string &data)
             {
                 append(data.c_str(),data.size());
             }
 
-            void moveReadindex(int len)     //移动读下标位置,外部从buffer读完以后由用户调用
-            {
-                readerIndex_ = readerIndex_ + len;   
-            }
-
-            void moveWriteindex(int len)    //移动写下标位置,用户不必调用，append自动调用
-            {
-                writeIndex_ = writeIndex_ + len;
-            }
-
-            int readFd(int fd); 
-
-        private:
-            char *begin(){return &*buffer_.begin();}
             char *getReadPeek()     //获得读位置的指针
             {
                 return begin() + readerIndex_;
             }
-            char *getWritePeek()
+            char *getWritePeek()    //获得可写位置
             {
                 return begin() + writeIndex_;
-            } 
+            }
+
+            void moveReadIndex(int len)     //移动读下标位置,外部从buffer读完以后由用户调用
+            {
+                readerIndex_ = readerIndex_ + len;   
+            }
+
+            void moveWriteIndex(int len)    //移动写下标位置,用户不必调用，append自动调用
+            {
+                writeIndex_ = writeIndex_ + len;
+            }
+
+            int readFromFd(int fd);     //从套接字中读取数据
+
+            int writeToFd(int fd);            //往套接字里写数据
+
+        private:
+            char *begin(){return &*buffer_.begin();}
 
             void copySpace(size_t len)  //移动拷贝数据到buffer的起点
             {
-                std::copy(begin() + readerIndex_,begin() + writeIndex_(),begin());
+                std::copy(begin() + readerIndex_,begin() + writeIndex_,begin());
                 readerIndex_ = 0;
                 writeIndex_ = readableSize();                
             }
