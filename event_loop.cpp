@@ -38,15 +38,10 @@ void EventLoop::loop()
             {
                 handleEventFdRead();   
             }
-            else if(events_[i].events & EPOLLHUP)
-            {
-                //处理关闭事件
-                closeCallback_();
-            }
             else if(events_[i].events & EPOLLIN)
             {
                 //处理读事件
-                readCallback();   
+                handleRead(events_[i].data.fd);   
             }
             else if(events_[i].events & EPOLLOUT)
             {
@@ -68,6 +63,25 @@ void EventLoop::handleEventFdRead(void)
     assert(count == sizeof(fd));
     //将新来的套接字添加进epoll事件表中
     epoll_->addFd((int)fd);
+}
+
+void EventLoop::handleRead(int fd)
+{
+    char buff[1024];
+    int ret = read(fd,buff,sizeof(buff));
+    if(ret == 0)        //对方关闭
+    {
+        handleClose(fd);
+    }
+    printf("读到了%d字节\n",ret);
+    readCallback_();
+}
+
+void EventLoop::handleClose(int fd)
+{
+    close(fd);
+    printf("已关闭\n");
+    closeCallback_();   
 }
 
 
