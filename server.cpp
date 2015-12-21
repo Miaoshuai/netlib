@@ -24,7 +24,9 @@ Server::~Server()
 
 void Server::start()
 {
-    baseLoopPtr_->setReadCallback(readCallback_);   //设置读回调函数
+    baseLoopPtr_->setConnectionCallback(connectionCallback_);//设置连接回调
+    baseLoopPtr_->setMessageCallback(messageCallback_);   //设置读回调函数
     baseLoopPtr_->setCloseCallback(closeCallback_);  //设置关闭回调函数
+    baseLoopPtr_->setWriteCompleteCallback(writeCompleteCallback_);
     baseLoopPtr_->start();                          //开始循环
 }
