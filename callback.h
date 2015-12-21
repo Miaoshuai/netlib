@@ -9,13 +9,14 @@
 #define CALLBACK_H_
 
 #include <functional>
-
+#include "connection.h"
+#include <memory>
 namespace netlib
 {
     typedef std::function<void(void)> connectionCallback;
-    typedef std::function<void(void)> readCallback;
-    typedef std::function<void(void)> closeCallback;
-    typedef std::function<void(void)> writeCompleteCallback;
+    typedef std::function<void(std::shared_ptr<Connection>)> messageCallback;
+    typedef std::function<void(std::shared_ptr<Connection>)> closeCallback;
+    typedef std::function<void(std::shared_ptr<Connection>)> writeCompleteCallback;
 }
 
 #endif
