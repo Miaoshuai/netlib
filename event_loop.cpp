@@ -7,6 +7,7 @@
  =======================================================*/
 #include "event_loop.h"
 #include "epoll.h"
+#include "connection.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
@@ -38,6 +39,11 @@ void EventLoop::loop()
             {
                 handleEventFdRead();   
             }
+            else if(events_[i].events & EPOLLRDHUP)
+            {
+                //处理关闭
+                handleClose(events_[i].data.fd);
+            }
             else if(events_[i].events & EPOLLIN)
             {
                 //处理读事件
@@ -63,25 +69,26 @@ void EventLoop::handleEventFdRead(void)
     assert(count == sizeof(fd));
     //将新来的套接字添加进epoll事件表中
     epoll_->addFd((int)fd);
+    //将新连接插入到封装成connection然后插入到connectionMap中
+    connectionMap.insert(std::pair<int,std::shared_ptr<Connection>>(fd,std::make_shared<Connection>(fd)));
 }
 
 void EventLoop::handleRead(int fd)
 {
-    char buff[1024];
-    int ret = read(fd,buff,sizeof(buff));
-    if(ret == 0)        //对方关闭
+    int count = connectionMap[fd]->inputBuffer_.readFromFd(fd);  //将数据读到该描述符的inputBuffer中
+    
+    messageCallback_(connectionMap[fd]);//当消息条件满足时调用messageCallback
+    if(count == 0)  //对端关闭
     {
         handleClose(fd);
     }
-    printf("读到了%d字节\n",ret);
-    readCallback_();
 }
 
 void EventLoop::handleClose(int fd)
 {
     close(fd);
     printf("已关闭\n");
-    closeCallback_();   
+    closeCallback_(connectionMap[fd]);   
 }
 
 
