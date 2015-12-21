@@ -13,7 +13,9 @@
 #include <sys/epoll.h>
 #include "epoll.h"
 #include "callback.h"
+#include "connection.h"
 #include <stdio.h>
+#include <map>
 
 namespace netlib    //自定义命名空间netlib
 {
@@ -26,20 +28,28 @@ namespace netlib    //自定义命名空间netlib
             void handleEventFdRead(void);
             void handleRead(int fd);
             void handleClose(int fd);
-            void setReadCallback(readCallback cb)
+            void setMessageCallback(messageCallback cb)
             {
-                readCallback_ = cb;
+                messageCallback_ = cb;
             }
             void setCloseCallback(closeCallback cb)
             {
                 closeCallback_ = cb;
+            }
+            void setWriteCompleteCallback(writeCompleteCallback cb)
+            {
+                writeCompleteCallback_ = cb;
             } 
         private:
+            typedef std::map<int,std::shared_ptr<Connection>> ConnectionMap;
+
             int eventFd_;  //用于主loop向其他loop传递新连接的文件描述符
             std::shared_ptr<Epoll> epoll_;  //所拥有的epoll循环
             struct epoll_event events_[1024];  //获取epoll的就绪事件
-            readCallback readCallback_;    //读回调
+            messageCallback messageCallback_;    //消息回调
             closeCallback closeCallback_;  //关闭回调
+            writeCompleteCallback writeCompleteCallback_;
+            ConnectionMap connectionMap;
     };
 }
 #endif
