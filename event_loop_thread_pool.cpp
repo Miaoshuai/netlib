@@ -70,8 +70,9 @@ int LoopThreadPool::createEventFd()
 void LoopThreadPool::threadFunc(int eventFd,LoopThreadPool *loopThreadPool)
 {
     EventLoop loop(eventFd);
-    loop.setReadCallback(loopThreadPool->getReadCallback());  //设置读回调
+    loop.setMessageCallback(loopThreadPool->getMessageCallback());  //设置消息回调
     loop.setCloseCallback(loopThreadPool->getCloseCallback());  //设置关闭回调
+    loop.setWriteCompleteCallback(loopThreadPool->getWriteCompleteCallback());//设置写完成回调
     loop.loop();                //启动循环
 }
 
