@@ -25,19 +25,24 @@ namespace netlib
             {
                 connectionCallback_ = cb;
             }
-            void setReadCallback(readCallback cb)
+            void setMessageCallback(messageCallback cb)
             {
-                readCallback_ = cb;
+                messageCallback_ = cb;
             }
             void setCloseCallback(closeCallback cb)
             {
                 closeCallback_ = cb;
             }
+            void setWriteCompleteCallback(writeCompleteCallback cb)
+            {
+                writeCompleteCallback_ = cb;
+            }
         private:
             std::shared_ptr<BaseLoop> baseLoopPtr_; //保存baseLoop的智能指针
-            connectionCallback connectionCallback_;
-            readCallback readCallback_;
-            closeCallback closeCallback_;
+            connectionCallback connectionCallback_; //连接回调
+            messageCallback messageCallback_;       //消息回调
+            closeCallback closeCallback_;           //关闭回调
+            writeCompleteCallback writeCompleteCallback_;//写完成回调
     };
 }
 
