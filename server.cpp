@@ -3,19 +3,19 @@
     > Author: MiaoShuai
     > E-mail:  
     > Other :  
-    > Created Time: 2015年12月20日 星期日 15时27分50秒
+    > Created Time: 2015年12月20日 星期日 21时53分51秒
  =======================================================*/
 #include "server.h"
+#include <memory>
 #include <string>
 
 using namespace netlib;
 
 Server::Server(std::string ip,int port,int loopNumber)
-    :baseLoopPtr_(new BaseLoop(ip,port,loopNumber))
+    :baseLoopPtr_(std::make_shared<BaseLoop>(ip,port,loopNumber))
 {
-
+    
 }
-
 
 Server::~Server()
 {
@@ -24,7 +24,7 @@ Server::~Server()
 
 void Server::start()
 {
-    baseLoopPtr_->start();
+    baseLoopPtr_->setReadCallback(readCallback_);   //设置读回调函数
+    baseLoopPtr_->setCloseCallback(closeCallback_);  //设置关闭回调函数
+    baseLoopPtr_->start();                          //开始循环
 }
-
-
