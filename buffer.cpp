@@ -10,7 +10,7 @@
 #include <sys/uio.h>    //readv
 #include <fcntl.h>
 #include <unistd.h>
-
+#include <stdio.h>
 using namespace netlib;
 
 int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据到buffer中
@@ -21,6 +21,7 @@ int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据
         assert(count >= 0);
 
         writeIndex_ += count;
+        return count;
     }
     else
     {
@@ -35,7 +36,6 @@ int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据
 
         int count = readv(fd,vec,2);    //readv读取数据,注意readv用完一块才会用下一块
         assert(count >= 0);
-
         if(count <= writeableSize())    //去读到的数据buffer可以容纳
         {
             writeIndex_ += count;
@@ -46,6 +46,7 @@ int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据
             writeIndex_ = buffer_.size();   //注意我们readv的时候没用append所以得手动增加writeIndex_
             append(extrabuf,count - writeable);
         }
+        return count;
     }
     return 0;  
 }
