@@ -13,6 +13,8 @@
 #include <thread>
 #include <map>
 #include <memory>
+#include <functional>
+#include <stdio.h>
 
 using namespace netlib;
 
@@ -25,13 +27,16 @@ LoopThreadPool::LoopThreadPool(int number)
 
 LoopThreadPool::~LoopThreadPool()
 {
-
+    for(auto t : threadVector_) //回收线程
+    {
+        t->join();
+    }
 }
 
 
 int LoopThreadPool::getNextLoop()
 {
-    int fd = fdMap_[next_];
+    int fd = fdMap_[next_]; //获取接下来要接受任务的loop的eventfd
     if(next_ == loopNumber_)
     {
         next_ = 1;   //再次回到第一个循环
@@ -50,10 +55,9 @@ void LoopThreadPool::start()
     for(int i = 1; i <= loopNumber_; i++)
     {
         fd = createEventFd();
-        fdMap_.pushback(std::pair<int,int>(i,fd));   //将编号及对应的fd存入map
-        threadVector_.push_back(make_shared<thread>(threadFunc,fd));    //将新创建的线程对象加入容器中
+        fdMap_.insert(std::pair<int,int>(i,fd));   //将编号及对应的fd存入map
+        threadVector_.push_back(std::make_shared<std::thread>(threadFunc,fd,this));    //将新创建的线程对象加入容器中
     }
-          
 }
 
 int LoopThreadPool::createEventFd()
@@ -63,14 +67,15 @@ int LoopThreadPool::createEventFd()
     return fd;
 }
 
-void threadFunc(int eventFd)
+void LoopThreadPool::threadFunc(int eventFd,LoopThreadPool *loopThreadPool)
 {
     EventLoop loop(eventFd);
-    loop.setReadCallback(fun);  //设置读回调
+    loop.setReadCallback(loopThreadPool->getReadCallback());  //设置读回调
+    loop.setCloseCallback(loopThreadPool->getCloseCallback());  //设置关闭回调
     loop.loop();                //启动循环
 }
 
-void fun(void)
+void LoopThreadPool::fun(void)
 {
     printf("读事件发生\n");
 }
