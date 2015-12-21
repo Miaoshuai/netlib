@@ -60,9 +60,9 @@ void BaseLoop::start(void)
     socklen_t len = sizeof(clientAddress); //客户端地址长度
     int connfd;
     listenFd_ = createListenFd();       //获得监听套接字
-
-    loopThreadPoolPtr_->setReadCallback(readCallback_); //设置读回调函数
-    loopThreadPoolPtr_->setCloseCallback(closeCallback_);//设置关闭回调函数
+    loopThreadPoolPtr_->setMessageCallback(messageCallback_);   //设置读回调函数
+    loopThreadPoolPtr_->setCloseCallback(closeCallback_);  //设置关闭回调函数
+    loopThreadPoolPtr_->setWriteCompleteCallback(writeCompleteCallback_);
     loopThreadPoolPtr_->start();        //开启loop线程池
 
     while(1)
