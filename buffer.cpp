@@ -13,7 +13,7 @@
 
 using namespace netlib;
 
-int Buffer::readFromFd(fd)    //作为inputBuffer从套接字中读取数据到buffer中
+int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据到buffer中
 {
     if(writeableSize() > 1024*10)   //如果可用空间大于10240则不必为其开辟栈空间
     {
@@ -44,7 +44,7 @@ int Buffer::readFromFd(fd)    //作为inputBuffer从套接字中读取数据到b
         {
             //buffer不够用，有部分数据在栈中，在将其添加到buffer中
             writeIndex_ = buffer_.size();   //注意我们readv的时候没用append所以得手动增加writeIndex_
-            append(extrabuf,n - writeable);
+            append(extrabuf,count - writeable);
         }
     }
     return 0;  
@@ -56,4 +56,5 @@ int Buffer::writeToFd(int fd)     //作为outputBuffer将buffer中的数据写�
     assert(count >= 0);
 
     moveReadIndex(count);   //移动读下标
+    return count;
 }
