@@ -8,6 +8,8 @@
 #ifndef BUFFER_H_
 #define BUFFER_H_
 
+#include "endian.h"
+
 #include <string>
 #include <vector>
 #include <assert.h>
@@ -60,7 +62,26 @@ namespace netlib
             {
                 append(data.c_str(),data.size());
             }
+            
+            //添加整形数
+            void appendInt64(int64_t x)
+            {
+                int64_t be64 = hostToNetwork64(x);
+                append(&be64,sizof(be64));
+            }
 
+            void appendInt32(int32_t x)
+            {
+                int32_t be32 = hostToNetwork32(x);
+                append(&be32,sizof(be32));
+            }
+
+
+            void appendInt16(int16_t x)
+            {
+                int64_t be16 = hostToNetwork16(x);
+                append(&be16,sizof(be16));
+            }
             char *getReadPeek()     //获得读位置的指针
             {
                 return begin() + readerIndex_;
