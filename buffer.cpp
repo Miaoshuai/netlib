@@ -31,8 +31,8 @@ int Buffer::readFromFd(int fd)    //作为inputBuffer从套接字中读取数据
         int writeable = writeableSize();
         vec[0].iov_base = getWritePeek();
         vec[0].iov_len = writeableSize();
-        vec[0].iov_base = extrabuf;
-        vec[0].iov_len = sizeof(extrabuf);
+        vec[1].iov_base = extrabuf;
+        vec[1].iov_len = sizeof(extrabuf);
 
         int count = readv(fd,vec,2);    //readv读取数据,注意readv用完一块才会用下一块
         assert(count >= 0);

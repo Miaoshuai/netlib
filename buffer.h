@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 #include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
 namespace netlib
 {
@@ -20,8 +22,8 @@ namespace netlib
     {
         public:
             static const int initialSize = 1024;
-            Buffer(int size = initialSize)
-                :buffer_(size),
+            Buffer()
+                :buffer_(initialSize),
                 readerIndex_(0),
                 writeIndex_(0)
             {
@@ -67,21 +69,48 @@ namespace netlib
             void appendInt64(int64_t x)
             {
                 int64_t be64 = hostToNetwork64(x);
-                append(&be64,sizof(be64));
+                append(&be64,sizeof(be64));
             }
 
             void appendInt32(int32_t x)
             {
                 int32_t be32 = hostToNetwork32(x);
-                append(&be32,sizof(be32));
+                append(&be32,sizeof(be32));
             }
 
 
             void appendInt16(int16_t x)
             {
                 int64_t be16 = hostToNetwork16(x);
-                append(&be16,sizof(be16));
+                append(&be16,sizeof(be16));
             }
+
+            int64_t peekInt64()
+            {
+                assert(readableSize() >= sizeof(int64_t));
+                int64_t be64 = 0;
+                memcpy(&be64,getReadPeek(),sizeof(be64));
+                return networkToHost64(be64);
+            }
+
+
+            int32_t peekInt32()
+            {
+                assert(readableSize() >= sizeof(int32_t));
+                int32_t be32 = 3;
+                memcpy(&be32,getReadPeek(),sizeof(be32));
+                return networkToHost32(be32);
+            }
+
+
+            int16_t peekInt16()
+            {
+                assert(readableSize() >= sizeof(int16_t));
+                int16_t be16 = 0;
+                memcpy(&be16,getReadPeek(),sizeof(be16));
+                return networkToHost16(be16);
+            }
+
             char *getReadPeek()     //获得读位置的指针
             {
                 return begin() + readerIndex_;
@@ -101,20 +130,7 @@ namespace netlib
                 writeIndex_ = writeIndex_ + len;
             }
 
-            int readFromFd(int fd);     //从套接字中读取数据
-
-            int writeToFd(int fd);            //往套接字里写数据
-
-        private:
-            char *begin(){return &*buffer_.begin();}
-
-            void copySpace(size_t len)  //移动拷贝数据到buffer的起点
-            {
-                std::copy(begin() + readerIndex_,begin() + writeIndex_,begin());
-                readerIndex_ = 0;
-                writeIndex_ = readableSize();                
-            }
-
+            
             void makeSureEnough(int len)
             {
                 
@@ -130,6 +146,21 @@ namespace netlib
                     }
                 }
             }
+
+            int readFromFd(int fd);     //从套接字中读取数据
+
+            int writeToFd(int fd);            //往套接字里写数据
+
+        private:
+            char *begin(){return &*buffer_.begin();}
+
+            void copySpace(size_t len)  //移动拷贝数据到buffer的起点
+            {
+                std::copy(begin() + readerIndex_,begin() + writeIndex_,begin());
+                readerIndex_ = 0;
+                writeIndex_ = readableSize();                
+            }
+
         private:
             std::vector<char> buffer_;
             int readerIndex_;
