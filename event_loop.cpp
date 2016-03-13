@@ -15,7 +15,8 @@
 using namespace netlib;
 
 EventLoop::EventLoop(int eventFd)
-    :eventFd_(eventFd),epoll_(new Epoll(1024))
+    :eventFd_(eventFd),epoll_(new Epoll(1024)),
+    objectPool_(1024,0,epoll_)
 {
     //将eventFd_添加到epoll事件表中
     epoll_->addFd(eventFd_);
@@ -70,14 +71,16 @@ void EventLoop::handleEventFdRead(void)
     //将新来的套接字添加进epoll事件表中
     epoll_->addFd((int)fd);
     //将新连接插入到封装成connection然后插入到connectionMap中
-    connectionMap.insert(std::pair<int,std::shared_ptr<Connection>>(fd,std::make_shared<Connection>(fd)));
+    std::shared_ptr<Connection> connectionPtr(objectPool_.getObject());
+    connectionPtr->fd_ = fd;
+    connectionMap_.insert(std::pair<int,std::shared_ptr<Connection>>(fd,connectionPtr));
 }
 
 void EventLoop::handleRead(int fd)
 {
-    int count = connectionMap[fd]->inputBuffer_.readFromFd(fd);  //将数据读到该描述符的inputBuffer中
+    int count = connectionMap_[fd]->inputBuffer_.readFromFd(fd);  //将数据读到该描述符的inputBuffer中
     
-    messageCallback_(connectionMap[fd]);//当消息条件满足时调用messageCallback
+    messageCallback_(connectionMap_[fd],&connectionMap_[fd]->inputBuffer_);//当消息条件满足时调用messageCallback
     if(count == 0)  //对端关闭
     {
         handleClose(fd);
@@ -88,7 +91,7 @@ void EventLoop::handleClose(int fd)
 {
     close(fd);
     printf("已关闭\n");
-    closeCallback_(connectionMap[fd]);   
+    closeCallback_(connectionMap_[fd]);   
 }
 
 

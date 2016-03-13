@@ -14,6 +14,7 @@
 #include "epoll.h"
 #include "callback.h"
 #include "connection.h"
+#include "objectPool.h"
 #include <stdio.h>
 #include <map>
 
@@ -48,8 +49,9 @@ namespace netlib    //自定义命名空间netlib
             struct epoll_event events_[1024];  //获取epoll的就绪事件
             messageCallback messageCallback_;    //消息回调
             closeCallback closeCallback_;  //关闭回调
+            ObjectPool<Connection> objectPool_  //连接对象池
             writeCompleteCallback writeCompleteCallback_;
-            ConnectionMap connectionMap;
+            ConnectionMap connectionMap_;
     };
 }
 #endif
