@@ -70,8 +70,8 @@ void EventLoop::handleEventFdRead(void)
     assert(count == sizeof(fd));
     //将新来的套接字添加进epoll事件表中
     epoll_->addFd((int)fd);
-    //将新连接插入到封装成connection然后插入到connectionMap中
-    std::shared_ptr<Connection> connectionPtr(objectPool_.getObject());
+    //从连接池中取出新连接,并给智能指针自定义删除器，将连接放回连接池
+    std::shared_ptr<Connection> connectionPtr(objectPool_.getObject(),[](Connection *p)[objectPool_.giveBackObject(p)]);
     connectionPtr->fd_ = fd;
     connectionMap_.insert(std::pair<int,std::shared_ptr<Connection>>(fd,connectionPtr));
 }
